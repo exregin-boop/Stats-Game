@@ -1,0 +1,2480 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="auto">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GameView — Игровая статистика</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        /* ============================================
+           CSS VARIABLES — THEME SYSTEM
+           ============================================ */
+        :root {
+            --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --radius: 16px;
+            --radius-sm: 12px;
+            --radius-xs: 8px;
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --blur: 40px;
+            --blur-light: 20px;
+        }
+
+        /* Dark Theme */
+        [data-theme="dark"] {
+            --bg-primary: #000000;
+            --bg-secondary: #0a0a0a;
+            --bg-tertiary: #111111;
+            --glass-bg: rgba(255, 255, 255, 0.06);
+            --glass-bg-hover: rgba(255, 255, 255, 0.1);
+            --glass-bg-strong: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --glass-border-hover: rgba(255, 255, 255, 0.2);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --text-tertiary: rgba(255, 255, 255, 0.4);
+            --accent: #007AFF;
+            --accent-rgb: 0, 122, 255;
+            --accent-hover: #0A84FF;
+            --success: #30D158;
+            --success-bg: rgba(48, 209, 88, 0.12);
+            --warning: #FFD60A;
+            --warning-bg: rgba(255, 214, 10, 0.12);
+            --danger: #FF453A;
+            --danger-bg: rgba(255, 69, 58, 0.12);
+            --orange: #FF9F0A;
+            --purple: #BF5AF2;
+            --separator: rgba(255, 255, 255, 0.08);
+            --input-bg: rgba(255, 255, 255, 0.06);
+            --shadow: 0 8px 40px rgba(0, 0, 0, 0.4);
+            --shadow-elevated: 0 20px 60px rgba(0, 0, 0, 0.5);
+            --overlay: rgba(0, 0, 0, 0.6);
+            --skeleton: rgba(255, 255, 255, 0.08);
+            --skeleton-shine: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Light Theme */
+        [data-theme="light"] {
+            --bg-primary: #F2F2F7;
+            --bg-secondary: #FFFFFF;
+            --bg-tertiary: #F2F2F7;
+            --glass-bg: rgba(255, 255, 255, 0.72);
+            --glass-bg-hover: rgba(255, 255, 255, 0.85);
+            --glass-bg-strong: rgba(255, 255, 255, 0.82);
+            --glass-border: rgba(0, 0, 0, 0.06);
+            --glass-border-hover: rgba(0, 0, 0, 0.12);
+            --text-primary: #000000;
+            --text-secondary: rgba(0, 0, 0, 0.55);
+            --text-tertiary: rgba(0, 0, 0, 0.3);
+            --accent: #007AFF;
+            --accent-rgb: 0, 122, 255;
+            --accent-hover: #0056CC;
+            --success: #34C759;
+            --success-bg: rgba(52, 199, 89, 0.1);
+            --warning: #FF9500;
+            --warning-bg: rgba(255, 149, 0, 0.1);
+            --danger: #FF3B30;
+            --danger-bg: rgba(255, 59, 48, 0.1);
+            --orange: #FF9500;
+            --purple: #AF52DE;
+            --separator: rgba(0, 0, 0, 0.06);
+            --input-bg: rgba(0, 0, 0, 0.04);
+            --shadow: 0 8px 40px rgba(0, 0, 0, 0.08);
+            --shadow-elevated: 0 20px 60px rgba(0, 0, 0, 0.12);
+            --overlay: rgba(255, 255, 255, 0.6);
+            --skeleton: rgba(0, 0, 0, 0.06);
+            --skeleton-shine: rgba(0, 0, 0, 0.1);
+        }
+
+        /* ============================================
+           RESET & BASE
+           ============================================ */
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            -webkit-text-size-adjust: 100%;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.5;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            min-height: 100vh;
+            transition: background var(--transition), color var(--transition);
+        }
+
+        /* ============================================
+           GLASS COMPONENTS
+           ============================================ */
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--blur));
+            -webkit-backdrop-filter: blur(var(--blur));
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            transition: all var(--transition);
+        }
+
+        .glass:hover {
+            background: var(--glass-bg-hover);
+            border-color: var(--glass-border-hover);
+        }
+
+        .glass-strong {
+            background: var(--glass-bg-strong);
+            backdrop-filter: blur(var(--blur));
+            -webkit-backdrop-filter: blur(var(--blur));
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--blur-light));
+            -webkit-backdrop-filter: blur(var(--blur-light));
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            transition: all var(--transition);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+            border-color: var(--glass-border-hover);
+        }
+
+        /* ============================================
+           ANIMATED BACKGROUND
+           ============================================ */
+        .bg-mesh {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .mesh-gradient {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.15;
+            animation: meshFloat 25s ease-in-out infinite;
+            will-change: transform;
+        }
+
+        [data-theme="light"] .mesh-gradient {
+            opacity: 0.08;
+        }
+
+        .mesh-gradient:nth-child(1) {
+            width: 600px; height: 600px;
+            background: var(--accent);
+            top: -200px; left: -200px;
+        }
+        .mesh-gradient:nth-child(2) {
+            width: 500px; height: 500px;
+            background: var(--purple);
+            top: 40%; right: -150px;
+            animation-delay: -8s;
+        }
+        .mesh-gradient:nth-child(3) {
+            width: 450px; height: 450px;
+            background: var(--success);
+            bottom: -100px; left: 30%;
+            animation-delay: -16s;
+        }
+
+        @keyframes meshFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(60px, -80px) scale(1.05); }
+            66% { transform: translate(-40px, 60px) scale(0.95); }
+        }
+
+        /* ============================================
+           HEADER
+           ============================================ */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 0 20px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--glass-bg-strong);
+            backdrop-filter: blur(var(--blur));
+            -webkit-backdrop-filter: blur(var(--blur));
+            border-bottom: 1px solid var(--separator);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+        }
+
+        .logo-mark {
+            width: 32px; height: 32px;
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-btn {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            border: none;
+            background: var(--glass-bg);
+            color: var(--text-primary);
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition);
+        }
+
+        .header-btn:hover {
+            background: var(--glass-bg-hover);
+            transform: scale(1.05);
+        }
+
+        .header-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Language Selector */
+        .lang-select {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 6px 10px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-family: var(--font);
+            cursor: pointer;
+            outline: none;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+
+        .lang-select option {
+            background: var(--bg-secondary);
+        }
+
+        /* ============================================
+           MAIN CONTAINER
+           ============================================ */
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px 20px;
+        }
+
+        /* ============================================
+           SCREENS
+           ============================================ */
+        .screen {
+            display: none;
+            animation: screenIn 0.4s ease;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes screenIn {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ============================================
+           SECTION HEADERS
+           ============================================ */
+        .section-title {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin-bottom: 6px;
+        }
+
+        .section-subtitle {
+            color: var(--text-secondary);
+            font-size: 15px;
+            margin-bottom: 24px;
+        }
+
+        /* ============================================
+           GAME SELECTION CARDS
+           ============================================ */
+        .games-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 16px;
+        }
+
+        .game-card {
+            cursor: pointer;
+            overflow: hidden;
+            position: relative;
+            padding: 0;
+        }
+
+        .game-card:active {
+            transform: scale(0.98) !important;
+        }
+
+        .game-banner {
+            height: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-banner::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            opacity: 0.15;
+        }
+
+        .game-banner-icon {
+            font-size: 56px;
+            z-index: 1;
+            filter: drop-shadow(0 4px 20px rgba(0,0,0,0.3));
+        }
+
+        .game-banner-glow {
+            position: absolute;
+            width: 200px; height: 200px;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.4;
+        }
+
+        .game-info {
+            padding: 20px;
+        }
+
+        .game-name {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .game-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 14px;
+            line-height: 1.5;
+        }
+
+        .game-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-online {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        .badge-dot {
+            width: 6px; height: 6px;
+            background: currentColor;
+            border-radius: 50%;
+        }
+
+        /* ============================================
+           LOGIN SCREEN
+           ============================================ */
+        .login-wrap {
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .login-card {
+            padding: 36px 28px;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .login-icon {
+            width: 72px; height: 72px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin: 0 auto 16px;
+        }
+
+        .login-header h2 {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .login-header p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-top: 6px;
+        }
+
+        .form-notice {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 14px 16px;
+            border-radius: var(--radius-sm);
+            background: rgba(var(--accent-rgb), 0.08);
+            border: 1px solid rgba(var(--accent-rgb), 0.15);
+            font-size: 13px;
+            color: var(--accent);
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .form-notice-icon {
+            font-size: 18px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--input-bg);
+            border: 1.5px solid var(--glass-border);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 16px;
+            font-family: var(--font);
+            outline: none;
+            transition: all var(--transition);
+        }
+
+        .form-input:focus {
+            border-color: var(--accent);
+            background: rgba(var(--accent-rgb), 0.04);
+            box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.1);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-tertiary);
+        }
+
+        .form-hint {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            margin-top: 6px;
+        }
+
+        /* ============================================
+           BUTTONS
+           ============================================ */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 24px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 16px;
+            font-weight: 600;
+            font-family: var(--font);
+            cursor: pointer;
+            transition: all var(--transition);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            box-shadow: 0 8px 24px rgba(var(--accent-rgb), 0.3);
+        }
+
+        .btn-ghost {
+            background: var(--glass-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-ghost:hover {
+            background: var(--glass-bg-hover);
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 14px;
+            border-radius: var(--radius-xs);
+        }
+
+        .btn-back {
+            background: none;
+            border: none;
+            color: var(--accent);
+            font-size: 15px;
+            font-weight: 500;
+            font-family: var(--font);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 0;
+            margin-bottom: 20px;
+            transition: opacity var(--transition);
+        }
+
+        .btn-back:hover {
+            opacity: 0.7;
+        }
+
+        /* ============================================
+           DASHBOARD
+           ============================================ */
+        .dash-player {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .dash-player-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .dash-avatar {
+            width: 56px; height: 56px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+        }
+
+        .dash-name {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .dash-tag {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-family: 'SF Mono', 'Fira Code', monospace;
+        }
+
+        .dash-player-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .live-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            background: var(--danger-bg);
+            color: var(--danger);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .live-dot {
+            width: 6px; height: 6px;
+            background: var(--danger);
+            border-radius: 50%;
+            animation: blink 1.4s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.2; }
+        }
+
+        /* ============================================
+           STATS GRID
+           ============================================ */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .stat-tile {
+            padding: 18px;
+            text-align: center;
+        }
+
+        .stat-tile-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .stat-tile-value {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .stat-tile-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        /* ============================================
+           TABS
+           ============================================ */
+        .tabs-bar {
+            display: flex;
+            gap: 2px;
+            padding: 4px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .tabs-bar::-webkit-scrollbar { display: none; }
+
+        .tab-btn {
+            padding: 10px 18px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            font-family: var(--font);
+            border-radius: var(--radius-xs);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all var(--transition);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+            background: var(--glass-bg);
+        }
+
+        .tab-btn.active {
+            background: var(--accent);
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .tab-panel {
+            display: none;
+            animation: screenIn 0.35s ease;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        /* ============================================
+           BATTLE LOG
+           ============================================ */
+        .battle-row {
+            padding: 16px 20px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .battle-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .battle-badge {
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .b-win { background: var(--success-bg); color: var(--success); }
+        .b-loss { background: var(--danger-bg); color: var(--danger); }
+        .b-draw { background: var(--warning-bg); color: var(--warning); }
+
+        .battle-meta {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .battle-sub {
+            font-size: 12px;
+            color: var(--text-tertiary);
+        }
+
+        .battle-right {
+            text-align: right;
+        }
+
+        .battle-trophies {
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .t-up { color: var(--success); }
+        .t-down { color: var(--danger); }
+
+        .battle-time {
+            font-size: 12px;
+            color: var(--text-tertiary);
+        }
+
+        /* ============================================
+           CARDS / BRAWLERS GRID
+           ============================================ */
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+        }
+
+        .item-tile {
+            padding: 14px 8px;
+            text-align: center;
+            cursor: default;
+        }
+
+        .item-tile:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent);
+        }
+
+        .item-emoji {
+            font-size: 32px;
+            margin-bottom: 6px;
+        }
+
+        .item-name {
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .item-level {
+            font-size: 10px;
+            color: var(--accent);
+            font-weight: 700;
+            margin-top: 2px;
+        }
+
+        /* ============================================
+           CLAN / CLUB CARD
+           ============================================ */
+        .clan-block {
+            padding: 24px;
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .clan-icon {
+            width: 64px; height: 64px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            flex-shrink: 0;
+        }
+
+        .clan-info h3 {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .clan-info > p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .clan-stats-row {
+            display: flex;
+            gap: 24px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
+
+        .clan-stat-item .cv {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .clan-stat-item .cl {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* ============================================
+           PROGRESS BARS
+           ============================================ */
+        .progress-item {
+            margin-bottom: 16px;
+        }
+
+        .progress-top {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+
+        .progress-top span:last-child {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .progress-track {
+            height: 6px;
+            background: var(--separator);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 3px;
+            background: linear-gradient(90deg, var(--accent), var(--purple));
+            width: 0%;
+            transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* ============================================
+           ACTIVITY FEED
+           ============================================ */
+        .feed {
+            max-height: 420px;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        .feed::-webkit-scrollbar { width: 4px; }
+        .feed::-webkit-scrollbar-track { background: transparent; }
+        .feed::-webkit-scrollbar-thumb { background: var(--separator); border-radius: 2px; }
+
+        .feed-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--separator);
+        }
+
+        .feed-item:last-child { border-bottom: none; }
+
+        .feed-icon {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .feed-text {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .feed-time {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            margin-top: 2px;
+        }
+
+        /* ============================================
+           LOADING
+           ============================================ */
+        .loader-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: var(--overlay);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .loader-overlay.active {
+            display: flex;
+        }
+
+        .loader-spinner {
+            width: 40px; height: 40px;
+            border: 3px solid var(--separator);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .loader-msg {
+            font-size: 15px;
+            color: var(--text-secondary);
+        }
+
+        /* ============================================
+           TOAST NOTIFICATIONS
+           ============================================ */
+        .toast {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            padding: 14px 20px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 200;
+            transform: translateX(120%);
+            transition: transform 0.5s cubic-bezier(0.68, -0.3, 0.265, 1.3);
+            max-width: 360px;
+            box-shadow: var(--shadow-elevated);
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast-ok {
+            background: var(--success-bg);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+
+        .toast-err {
+            background: var(--danger-bg);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+
+        .toast-info {
+            background: rgba(var(--accent-rgb), 0.12);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+        }
+
+        /* ============================================
+           ERROR STATE
+           ============================================ */
+        .error-block {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .error-block-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .error-block h3 {
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+
+        .error-block p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        /* ============================================
+           MEMBERS LIST
+           ============================================ */
+        .member-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--separator);
+        }
+
+        .member-row:last-child { border-bottom: none; }
+
+        .member-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .member-rank {
+            font-size: 14px;
+            font-weight: 700;
+            width: 28px;
+            text-align: center;
+        }
+
+        .member-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .member-role {
+            font-size: 12px;
+            color: var(--text-tertiary);
+        }
+
+        .member-trophies {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        /* ============================================
+           CHEST CYCLE
+           ============================================ */
+        .chests-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .chest-tile {
+            padding: 12px;
+            text-align: center;
+            min-width: 75px;
+        }
+
+        .chest-tile:hover {
+            transform: scale(1.08);
+        }
+
+        .chest-icon {
+            font-size: 28px;
+        }
+
+        .chest-label {
+            font-size: 10px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .chest-pos {
+            font-size: 10px;
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        /* ============================================
+           EMPTY STATE
+           ============================================ */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+        }
+
+        /* ============================================
+           SKELETON LOADING
+           ============================================ */
+        .skeleton {
+            background: var(--skeleton);
+            border-radius: var(--radius-xs);
+            animation: shimmer 1.5s infinite;
+            background-size: 200% 100%;
+            background-image: linear-gradient(
+                90deg,
+                var(--skeleton) 0%,
+                var(--skeleton-shine) 50%,
+                var(--skeleton) 100%
+            );
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* ============================================
+           RESPONSIVE
+           ============================================ */
+        @media (max-width: 768px) {
+            .games-list {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .items-grid {
+                grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+            }
+
+            .dash-player {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .battle-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .battle-right {
+                text-align: left;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 16px 12px;
+            }
+
+            .section-title {
+                font-size: 24px;
+            }
+
+            .login-card {
+                padding: 24px 20px;
+            }
+
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+
+            .stat-tile { padding: 14px; }
+            .stat-tile-value { font-size: 20px; }
+        }
+
+        /* Scrollbar global */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--separator); border-radius: 3px; }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 30px 20px;
+            font-size: 12px;
+            color: var(--text-tertiary);
+        }
+
+        .footer a { color: var(--accent); text-decoration: none; }
+    </style>
+</head>
+<body>
+
+    <!-- Background Mesh -->
+    <div class="bg-mesh">
+        <div class="mesh-gradient"></div>
+        <div class="mesh-gradient"></div>
+        <div class="mesh-gradient"></div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loader-overlay" id="loader">
+        <div class="loader-spinner"></div>
+        <div class="loader-msg" id="loaderMsg">Загрузка...</div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">
+                <div class="logo-mark">🎮</div>
+                <span>GameView</span>
+            </div>
+        </div>
+        <div class="header-right">
+            <select class="lang-select" id="langSelect" onchange="switchLang(this.value)">
+                <option value="ru">🇷🇺 RU</option>
+                <option value="en">🇺🇸 EN</option>
+                <option value="kk">🇰🇿 KZ</option>
+            </select>
+            <button class="header-btn" onclick="toggleTheme()" title="Сменить тему" id="themeBtn">🌙</button>
+            <button class="header-btn" onclick="showScreen('games')" title="Домой">🏠</button>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <!-- ========== GAMES SCREEN ========== -->
+        <div class="screen active" id="screen-games">
+            <h1 class="section-title" data-i18n="selectGame">🎮 Выберите игру</h1>
+            <p class="section-subtitle" data-i18n="selectGameDesc">Введите тег игрока и получите реальную статистику</p>
+
+            <div class="games-list">
+
+                <!-- Clash Royale -->
+                <div class="game-card glass-card" onclick="selectGame('cr')">
+                    <div class="game-banner" style="background: linear-gradient(135deg, #1a1a6e, #4834d4);">
+                        <div class="game-banner-glow" style="background: #6c5ce7;"></div>
+                        <div class="game-banner-icon">👑</div>
+                    </div>
+                    <div class="game-info">
+                        <div class="game-name">Clash Royale</div>
+                        <div class="game-desc" data-i18n="crDesc">Кубки, колода, история боёв, клан, сундуки</div>
+                        <div class="game-badge badge-online"><div class="badge-dot"></div> API</div>
+                    </div>
+                </div>
+
+                <!-- Clash of Clans -->
+                <div class="game-card glass-card" onclick="selectGame('coc')">
+                    <div class="game-banner" style="background: linear-gradient(135deg, #0a5e2a, #27ae60);">
+                        <div class="game-banner-glow" style="background: #2ecc71;"></div>
+                        <div class="game-banner-icon">⚔️</div>
+                    </div>
+                    <div class="game-info">
+                        <div class="game-name">Clash of Clans</div>
+                        <div class="game-desc" data-i18n="cocDesc">Ратуша, войска, герои, клан, ресурсы</div>
+                        <div class="game-badge badge-online"><div class="badge-dot"></div> API</div>
+                    </div>
+                </div>
+
+                <!-- Brawl Stars -->
+                <div class="game-card glass-card" onclick="selectGame('bs')">
+                    <div class="game-banner" style="background: linear-gradient(135deg, #8b1a1a, #e74c3c);">
+                        <div class="game-banner-glow" style="background: #ff6b6b;"></div>
+                        <div class="game-banner-icon">💥</div>
+                    </div>
+                    <div class="game-info">
+                        <div class="game-name">Brawl Stars</div>
+                        <div class="game-desc" data-i18n="bsDesc">Бравлеры, трофеи, клуб, история матчей</div>
+                        <div class="game-badge badge-online"><div class="badge-dot"></div> API</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ========== LOGIN SCREEN ========== -->
+        <div class="screen" id="screen-login">
+            <button class="btn-back" onclick="showScreen('games')">
+                ← <span data-i18n="back">Назад</span>
+            </button>
+
+            <div class="login-wrap">
+                <div class="login-card glass-strong">
+                    <div class="login-header">
+                        <div class="login-icon" id="loginIcon">👑</div>
+                        <h2 id="loginTitle">Clash Royale</h2>
+                        <p data-i18n="loginSubtitle">Введите тег для просмотра статистики</p>
+                    </div>
+
+                    <div class="form-notice">
+                        <span class="form-notice-icon">🔒</span>
+                        <span data-i18n="noPassword">Пароль не нужен — только публичный игровой тег</span>
+                    </div>
+
+                    <form id="loginForm" onsubmit="handleLogin(event)">
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="playerTag">Тег игрока</label>
+                            <input class="form-input" type="text" id="tagInput"
+                                   placeholder="#2YG8RQPJL" required autocomplete="off"
+                                   spellcheck="false">
+                            <div class="form-hint" data-i18n="tagHint">Тег находится в профиле игры (начинается с #)</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" data-i18n="search">
+                            🔍 Найти аккаунт
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== DASHBOARD SCREEN ========== -->
+        <div class="screen" id="screen-dash">
+            <button class="btn-back" onclick="showScreen('games')">
+                ← <span data-i18n="backToGames">К играм</span>
+            </button>
+
+            <!-- Player Header -->
+            <div class="dash-player glass-strong" id="dashHeader">
+                <!-- filled by JS -->
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-row" id="dashStats">
+                <!-- filled by JS -->
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs-bar glass" id="dashTabs"></div>
+
+            <!-- Tab Panels -->
+            <div id="dashPanels"></div>
+        </div>
+
+    </div>
+
+    <div class="footer">
+        GameView © 2025 — <span data-i18n="footerText">Данные через официальные Supercell API</span>
+    </div>
+
+    <script>
+    // ===============================================
+    <script>
+    // Твои настройки теперь пустые, ключи лежат на сервере
+    const API_KEYS = { cr: '', coc: '', bs: '' };
+    const API_BASES = { cr: '', coc: '', bs: '' };
+
+    // ФУНКЦИЯ API_CALL ИЗМЕНЕНА ДЛЯ РАБОТЫ ЧЕРЕЗ ТВОЙ СЕРВЕР
+    async function apiCall(game, endpoint) {
+        // Извлекаем чистый тег из эндпоинта (например из /players/%23TAG)
+        const tagMatch = endpoint.match(/players\/%23(.*)/);
+        const tag = tagMatch ? tagMatch[1] : '';
+        
+        // Чистим эндпоинт для сервера
+        const cleanEndpoint = endpoint.split('/%23')[0]; 
+        
+        // Делаем запрос к нашему Python серверу
+        const res = await fetch(`/api/${game}${cleanEndpoint}?tag=${tag}`);
+
+        if (!res.ok) {
+            const status = res.status;
+            if (status === 404) throw new Error('NOT_FOUND');
+            throw new Error(`HTTP_${status}`);
+        }
+        return await res.json();
+    }
+
+    // ... Весь остальной твой JS (i18n, render, и т.д.) ОСТАЛСЯ ПРЕЖНИМ ...
+    const GAME_META = {
+        cr: {
+            name: 'Clash Royale', icon: '👑',
+            gradient: 'linear-gradient(135deg, #1a1a6e, #4834d4)',
+            color: '#6c5ce7'
+        },
+        coc: {
+            name: 'Clash of Clans', icon: '⚔️',
+            gradient: 'linear-gradient(135deg, #0a5e2a, #27ae60)',
+            color: '#27ae60'
+        },
+        bs: {
+            name: 'Brawl Stars', icon: '💥',
+            gradient: 'linear-gradient(135deg, #8b1a1a, #e74c3c)',
+            color: '#e74c3c'
+        }
+    };
+
+    // ===============================================
+    // i18n
+    // ===============================================
+    const i18n = {
+        ru: {
+            selectGame: '🎮 Выберите игру',
+            selectGameDesc: 'Введите тег игрока и получите реальную статистику',
+            crDesc: 'Кубки, колода, история боёв, клан, сундуки',
+            cocDesc: 'Ратуша, войска, герои, клан, ресурсы',
+            bsDesc: 'Бравлеры, трофеи, клуб, история матчей',
+            back: 'Назад',
+            backToGames: 'К играм',
+            loginSubtitle: 'Введите тег для просмотра статистики',
+            noPassword: 'Пароль не нужен — только публичный игровой тег',
+            playerTag: 'Тег игрока',
+            tagHint: 'Тег находится в профиле игры (начинается с #)',
+            search: '🔍 Найти аккаунт',
+            footerText: 'Данные через официальные Supercell API',
+            loading: 'Загрузка...',
+            connecting: 'Подключение к серверу...',
+            searching: 'Поиск игрока...',
+            loadingProfile: 'Загрузка профиля...',
+            loadingBattles: 'Загрузка боёв...',
+            ready: 'Готово!',
+            trophies: 'Кубки',
+            maxTrophies: 'Макс. кубки',
+            wins: 'Победы',
+            losses: 'Поражения',
+            level: 'Уровень',
+            cards: 'Карты',
+            deck: 'Колода',
+            battles: 'Бои',
+            clan: 'Клан',
+            chests: 'Сундуки',
+            overview: 'Обзор',
+            brawlers: 'Бравлеры',
+            club: 'Клуб',
+            troops: 'Войска',
+            heroes: 'Герои',
+            members: 'Участники',
+            refresh: '🔄 Обновить',
+            logout: '🚪 Выйти',
+            victory: 'Победа',
+            defeat: 'Поражение',
+            draw: 'Ничья',
+            noClan: 'Нет клана',
+            noClub: 'Нет клуба',
+            notFound: 'Игрок не найден',
+            notFoundDesc: 'Проверьте тег и попробуйте снова',
+            tryAgain: 'Попробовать снова',
+            apiError: 'Ошибка API',
+            apiErrorDesc: 'Не удалось загрузить данные. Попробуйте позже.',
+            enterTag: 'Введите тег!',
+            accountLoaded: '✅ Аккаунт загружен!',
+            dataRefreshed: '🔄 Данные обновлены!',
+            townHall: 'Ратуша',
+            donations: 'Пожертвований',
+            warStars: 'Звёзд войны',
+            attackWins: 'Атак побед',
+            defenseWins: 'Оборон побед',
+            builderHall: 'Дом строителя',
+            totalBrawlers: 'Бравлеров',
+            soloWins: 'Solo побед',
+            duoWins: 'Duo побед',
+            trioWins: '3v3 побед',
+            powerLevel: 'Сила',
+            rank: 'Ранг',
+            exp: 'Опыт',
+            clanWars: 'Клан. войны',
+            currentDeck: 'Текущая колода',
+            recentBattles: 'Последние бои',
+            upcomingChests: 'Предстоящие сундуки',
+            clanMembers: 'Участники клана',
+            noBattles: 'Нет данных о боях',
+            ago: 'назад',
+            min: 'мин',
+            hour: 'ч',
+            day: 'д'
+        },
+        en: {
+            selectGame: '🎮 Select a Game',
+            selectGameDesc: 'Enter player tag and get real-time stats',
+            crDesc: 'Trophies, deck, battle log, clan, chests',
+            cocDesc: 'Town Hall, troops, heroes, clan, resources',
+            bsDesc: 'Brawlers, trophies, club, match history',
+            back: 'Back',
+            backToGames: 'Back to Games',
+            loginSubtitle: 'Enter tag to view statistics',
+            noPassword: 'No password needed — only public player tag',
+            playerTag: 'Player Tag',
+            tagHint: 'Tag can be found in game profile (starts with #)',
+            search: '🔍 Find Account',
+            footerText: 'Data via official Supercell API',
+            loading: 'Loading...',
+            connecting: 'Connecting to server...',
+            searching: 'Searching for player...',
+            loadingProfile: 'Loading profile...',
+            loadingBattles: 'Loading battles...',
+            ready: 'Ready!',
+            trophies: 'Trophies',
+            maxTrophies: 'Best Trophies',
+            wins: 'Wins',
+            losses: 'Losses',
+            level: 'Level',
+            cards: 'Cards',
+            deck: 'Deck',
+            battles: 'Battles',
+            clan: 'Clan',
+            chests: 'Chests',
+            overview: 'Overview',
+            brawlers: 'Brawlers',
+            club: 'Club',
+            troops: 'Troops',
+            heroes: 'Heroes',
+            members: 'Members',
+            refresh: '🔄 Refresh',
+            logout: '🚪 Logout',
+            victory: 'Victory',
+            defeat: 'Defeat',
+            draw: 'Draw',
+            noClan: 'No Clan',
+            noClub: 'No Club',
+            notFound: 'Player not found',
+            notFoundDesc: 'Check the tag and try again',
+            tryAgain: 'Try Again',
+            apiError: 'API Error',
+            apiErrorDesc: 'Could not load data. Try again later.',
+            enterTag: 'Enter a tag!',
+            accountLoaded: '✅ Account loaded!',
+            dataRefreshed: '🔄 Data refreshed!',
+            townHall: 'Town Hall',
+            donations: 'Donations',
+            warStars: 'War Stars',
+            attackWins: 'Attack Wins',
+            defenseWins: 'Defense Wins',
+            builderHall: 'Builder Hall',
+            totalBrawlers: 'Brawlers',
+            soloWins: 'Solo Wins',
+            duoWins: 'Duo Wins',
+            trioWins: '3v3 Wins',
+            powerLevel: 'Power',
+            rank: 'Rank',
+            exp: 'Exp',
+            clanWars: 'Clan Wars',
+            currentDeck: 'Current Deck',
+            recentBattles: 'Recent Battles',
+            upcomingChests: 'Upcoming Chests',
+            clanMembers: 'Clan Members',
+            noBattles: 'No battle data',
+            ago: 'ago',
+            min: 'min',
+            hour: 'h',
+            day: 'd'
+        },
+        kk: {
+            selectGame: '🎮 Ойынды таңдаңыз',
+            selectGameDesc: 'Ойыншы тегін енгізіп, нақты статистиканы алыңыз',
+            crDesc: 'Кубоктар, колода, шайқас тарихы, клан',
+            cocDesc: 'Ратуша, әскерлер, батырлар, клан',
+            bsDesc: 'Бравлерлер, кубоктар, клуб, матч тарихы',
+            back: 'Артқа',
+            backToGames: 'Ойындарға',
+            loginSubtitle: 'Статистиканы көру үшін тегті енгізіңіз',
+            noPassword: 'Құпиясөз қажет емес — тек ашық ойын тегі',
+            playerTag: 'Ойыншы тегі',
+            tagHint: 'Тег ойын профилінде (# белгісінен басталады)',
+            search: '🔍 Аккаунтты табу',
+            footerText: 'Supercell API арқылы деректер',
+            loading: 'Жүктелуде...',
+            connecting: 'Серверге қосылу...',
+            searching: 'Ойыншыны іздеу...',
+            loadingProfile: 'Профиль жүктелуде...',
+            loadingBattles: 'Шайқастар жүктелуде...',
+            ready: 'Дайын!',
+            trophies: 'Кубоктар',
+            maxTrophies: 'Макс. кубоктар',
+            wins: 'Жеңістер',
+            losses: 'Жеңілістер',
+            level: 'Деңгей',
+            cards: 'Карталар',
+            deck: 'Колода',
+            battles: 'Шайқастар',
+            clan: 'Клан',
+            chests: 'Сандықтар',
+            overview: 'Шолу',
+            brawlers: 'Бравлерлер',
+            club: 'Клуб',
+            troops: 'Әскерлер',
+            heroes: 'Батырлар',
+            members: 'Мүшелер',
+            refresh: '🔄 Жаңарту',
+            logout: '🚪 Шығу',
+            victory: 'Жеңіс',
+            defeat: 'Жеңіліс',
+            draw: 'Тең',
+            noClan: 'Клан жоқ',
+            noClub: 'Клуб жоқ',
+            notFound: 'Ойыншы табылмады',
+            notFoundDesc: 'Тегті тексеріп, қайта көріңіз',
+            tryAgain: 'Қайта көру',
+            apiError: 'API қатесі',
+            apiErrorDesc: 'Деректерді жүктеу мүмкін болмады.',
+            enterTag: 'Тегті енгізіңіз!',
+            accountLoaded: '✅ Аккаунт жүктелді!',
+            dataRefreshed: '🔄 Деректер жаңартылды!',
+            townHall: 'Ратуша',
+            donations: 'Қайырымдылық',
+            warStars: 'Соғыс жұлдыздары',
+            attackWins: 'Шабуыл жеңістері',
+            defenseWins: 'Қорғаныс жеңістері',
+            builderHall: 'Құрылысшы үйі',
+            totalBrawlers: 'Бравлерлер',
+            soloWins: 'Solo жеңістер',
+            duoWins: 'Duo жеңістер',
+            trioWins: '3v3 жеңістер',
+            powerLevel: 'Күш',
+            rank: 'Ранг',
+            exp: 'Тәжірибе',
+            clanWars: 'Клан соғыстары',
+            currentDeck: 'Ағымдағы колода',
+            recentBattles: 'Соңғы шайқастар',
+            upcomingChests: 'Келесі сандықтар',
+            clanMembers: 'Клан мүшелері',
+            noBattles: 'Шайқас деректері жоқ',
+            ago: 'бұрын',
+            min: 'мин',
+            hour: 'сағ',
+            day: 'күн'
+        }
+    };
+
+    let currentLang = 'ru';
+    let currentGame = null;
+    let currentTag = '';
+    let cachedData = {};
+
+    // ===============================================
+    // THEME SYSTEM (auto-detect)
+    // ===============================================
+    function initTheme() {
+        const saved = localStorage.getItem('gv-theme');
+        if (saved) {
+            setTheme(saved);
+        } else {
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            setTheme(prefersDark ? 'dark' : 'light');
+        }
+    }
+
+    function setTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('gv-theme', theme);
+        const btn = document.getElementById('themeBtn');
+        btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+    }
+
+    function toggleTheme() {
+        const current = document.documentElement.getAttribute('data-theme');
+        setTheme(current === 'dark' ? 'light' : 'dark');
+    }
+
+    // Listen for OS theme changes
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+        if (!localStorage.getItem('gv-theme')) {
+            setTheme(e.matches ? 'dark' : 'light');
+        }
+    });
+
+    // ===============================================
+    // LANGUAGE
+    // ===============================================
+    function switchLang(lang) {
+        currentLang = lang;
+        localStorage.setItem('gv-lang', lang);
+        applyI18n();
+    }
+
+    function t(key) {
+        return (i18n[currentLang] && i18n[currentLang][key]) || i18n.ru[key] || key;
+    }
+
+    function applyI18n() {
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            el.textContent = t(key);
+        });
+    }
+
+    function initLang() {
+        const saved = localStorage.getItem('gv-lang') || 'ru';
+        currentLang = saved;
+        document.getElementById('langSelect').value = saved;
+        applyI18n();
+    }
+
+    // ===============================================
+    // SCREENS
+    // ===============================================
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        const el = document.getElementById('screen-' + id);
+        if (el) el.classList.add('active');
+    }
+
+    // ===============================================
+    // TOAST
+    // ===============================================
+    function toast(msg, type = 'info') {
+        const el = document.getElementById('toast');
+        el.className = 'toast glass-strong toast-' + type;
+        el.textContent = msg;
+        el.classList.add('show');
+        setTimeout(() => el.classList.remove('show'), 3500);
+    }
+
+    // ===============================================
+    // LOADER
+    // ===============================================
+    function showLoader(msg) {
+        document.getElementById('loaderMsg').textContent = msg || t('loading');
+        document.getElementById('loader').classList.add('active');
+    }
+
+    function hideLoader() {
+        document.getElementById('loader').classList.remove('active');
+    }
+
+    function updateLoaderMsg(msg) {
+        document.getElementById('loaderMsg').textContent = msg;
+    }
+
+    // ===============================================
+    // API CALLS
+    // ===============================================
+    async function apiCall(game, endpoint) {
+        const url = `${API_BASES[game]}${endpoint}`;
+        const proxyUrl = `${PROXY}${encodeURIComponent(url)}`;
+
+        const res = await fetch(proxyUrl, {
+            headers: {
+                'Authorization': `Bearer ${API_KEYS[game]}`
+            }
+        });
+
+        if (!res.ok) {
+            const status = res.status;
+            if (status === 404) throw new Error('NOT_FOUND');
+            if (status === 403) throw new Error('FORBIDDEN');
+            throw new Error(`HTTP_${status}`);
+        }
+
+        return await res.json();
+    }
+
+    function encodeTag(tag) {
+        let t = tag.trim().toUpperCase();
+        if (!t.startsWith('#')) t = '#' + t;
+        return encodeURIComponent(t);
+    }
+
+    // ===============================================
+    // GAME SELECTION
+    // ===============================================
+    function selectGame(game) {
+        currentGame = game;
+        const meta = GAME_META[game];
+
+        document.getElementById('loginIcon').textContent = meta.icon;
+        document.getElementById('loginIcon').style.background = meta.gradient;
+        document.getElementById('loginTitle').textContent = meta.name;
+        document.getElementById('tagInput').value = '';
+
+        showScreen('login');
+    }
+
+    // ===============================================
+    // LOGIN / SEARCH
+    // ===============================================
+    async function handleLogin(e) {
+        e.preventDefault();
+
+        const tag = document.getElementById('tagInput').value.trim();
+        if (!tag) {
+            toast(t('enterTag'), 'err');
+            return;
+        }
+
+        currentTag = tag;
+        const encodedTag = encodeTag(tag);
+
+        try {
+            showLoader(t('connecting'));
+            await sleep(400);
+
+            updateLoaderMsg(t('searching'));
+
+            if (currentGame === 'cr') {
+                await loadClashRoyale(encodedTag);
+            } else if (currentGame === 'coc') {
+                await loadClashOfClans(encodedTag);
+            } else if (currentGame === 'bs') {
+                await loadBrawlStars(encodedTag);
+            }
+
+            hideLoader();
+            showScreen('dash');
+            toast(t('accountLoaded'), 'ok');
+
+        } catch (err) {
+            hideLoader();
+            console.error(err);
+
+            if (err.message === 'NOT_FOUND') {
+                toast(t('notFound') + ': ' + tag, 'err');
+            } else if (err.message === 'FORBIDDEN') {
+                toast('API IP не совпадает. Нужен прокси-сервер.', 'err');
+            } else {
+                toast(t('apiError') + ' (' + err.message + ')', 'err');
+            }
+        }
+    }
+
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    // ===============================================
+    // HELPERS
+    // ===============================================
+    function num(n) {
+        if (n == null) return '0';
+        return Number(n).toLocaleString();
+    }
+
+    function timeAgo(isoDate) {
+        if (!isoDate) return '';
+        // Supercell format: 20250120T123456.000Z
+        let d;
+        if (typeof isoDate === 'string' && isoDate.length === 24) {
+            const s = isoDate;
+            d = new Date(
+                `${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6,8)}T${s.slice(9,11)}:${s.slice(11,13)}:${s.slice(13,15)}Z`
+            );
+        } else {
+            d = new Date(isoDate);
+        }
+
+        const diff = Math.floor((Date.now() - d.getTime()) / 1000);
+        if (diff < 60) return `<1 ${t('min')} ${t('ago')}`;
+        if (diff < 3600) return `${Math.floor(diff/60)} ${t('min')} ${t('ago')}`;
+        if (diff < 86400) return `${Math.floor(diff/3600)} ${t('hour')} ${t('ago')}`;
+        return `${Math.floor(diff/86400)} ${t('day')} ${t('ago')}`;
+    }
+
+    function animateProgress() {
+        requestAnimationFrame(() => {
+            document.querySelectorAll('.progress-fill[data-pct]').forEach(el => {
+                el.style.width = el.getAttribute('data-pct') + '%';
+            });
+        });
+    }
+
+    // ===============================================
+    // CLASH ROYALE
+    // ===============================================
+    async function loadClashRoyale(tag) {
+        updateLoaderMsg(t('loadingProfile'));
+        const player = await apiCall('cr', `/players/${tag}`);
+
+        updateLoaderMsg(t('loadingBattles'));
+        let battles = [];
+        try { battles = await apiCall('cr', `/players/${tag}/battlelog`); } catch(e) {}
+
+        let chests = [];
+        try { chests = await apiCall('cr', `/players/${tag}/upcomingchests`); } catch(e) {}
+
+        cachedData = { player, battles, chests, game: 'cr', tag };
+        renderCRDashboard(player, battles, chests);
+    }
+
+    function renderCRDashboard(p, battles, chests) {
+        const meta = GAME_META.cr;
+
+        // Header
+        document.getElementById('dashHeader').innerHTML = `
+            <div class="dash-player-left">
+                <div class="dash-avatar" style="background:${meta.gradient};">${meta.icon}</div>
+                <div>
+                    <div class="dash-name">${escHtml(p.name)}</div>
+                    <div class="dash-tag">${p.tag}</div>
+                </div>
+            </div>
+            <div class="dash-player-right">
+                <div class="live-indicator"><div class="live-dot"></div>LIVE</div>
+                <button class="btn btn-ghost btn-small" onclick="refreshData()">${t('refresh')}</button>
+                <button class="btn btn-ghost btn-small" onclick="showScreen('games')">${t('logout')}</button>
+            </div>
+        `;
+
+        // Stats
+        document.getElementById('dashStats').innerHTML = [
+            { i: '🏆', v: num(p.trophies), l: t('trophies') },
+            { i: '⭐', v: num(p.bestTrophies), l: t('maxTrophies') },
+            { i: '🎯', v: num(p.wins), l: t('wins') },
+            { i: '💔', v: num(p.losses), l: t('losses') },
+            { i: '👑', v: p.expLevel, l: t('level') },
+            { i: '🃏', v: p.currentDeck ? p.currentDeck.length : 0, l: t('deck') },
+        ].map(s => `
+            <div class="stat-tile glass-card">
+                <div class="stat-tile-icon">${s.i}</div>
+                <div class="stat-tile-value">${s.v}</div>
+                <div class="stat-tile-label">${s.l}</div>
+            </div>
+        `).join('');
+
+        // Tabs
+        const tabs = [t('deck'), t('battles'), t('clan'), t('chests')];
+        document.getElementById('dashTabs').innerHTML = tabs.map((tb, i) =>
+            `<button class="tab-btn ${i===0?'active':''}" onclick="switchDashTab(${i}, this)">${tb}</button>`
+        ).join('');
+
+        // Panels
+        let deckHtml = '<div class="empty-state"><div class="empty-state-icon">🃏</div><p>No deck data</p></div>';
+        if (p.currentDeck && p.currentDeck.length) {
+            deckHtml = `<h3 style="margin-bottom:14px">${t('currentDeck')}</h3><div class="items-grid">
+                ${p.currentDeck.map(c => `
+                    <div class="item-tile glass-card">
+                        <div class="item-emoji">🃏</div>
+                        <div class="item-name">${escHtml(c.name)}</div>
+                        <div class="item-level">LVL ${c.level || c.maxLevel || '?'}</div>
+                    </div>
+                `).join('')}
+            </div>`;
+        }
+
+        let battlesHtml = `<div class="empty-state"><div class="empty-state-icon">⚔️</div><p>${t('noBattles')}</p></div>`;
+        if (battles && battles.length) {
+            battlesHtml = `<h3 style="margin-bottom:14px">${t('recentBattles')}</h3>` +
+                battles.slice(0, 15).map(b => {
+                    const isWin = b.team && b.opponent &&
+                        b.team[0] && b.opponent[0] &&
+                        (b.team[0].crowns > b.opponent[0].crowns);
+                    const isDraw = b.team && b.opponent &&
+                        b.team[0] && b.opponent[0] &&
+                        (b.team[0].crowns === b.opponent[0].crowns);
+                    const result = isWin ? 'win' : isDraw ? 'draw' : 'loss';
+                    const resultText = isWin ? t('victory') : isDraw ? t('draw') : t('defeat');
+                    const badgeClass = isWin ? 'b-win' : isDraw ? 'b-draw' : 'b-loss';
+                    const tChange = b.team && b.team[0] ? (b.team[0].trophyChange || 0) : 0;
+                    const opName = b.opponent && b.opponent[0] ? b.opponent[0].name : '?';
+                    const crowns = b.team && b.team[0] && b.opponent && b.opponent[0]
+                        ? `${b.team[0].crowns}-${b.opponent[0].crowns}` : '';
+
+                    return `
+                        <div class="battle-row glass-card">
+                            <div class="battle-left">
+                                <span class="battle-badge ${badgeClass}">${resultText}</span>
+                                <div>
+                                    <div class="battle-meta">${escHtml(b.type || b.gameMode?.name || 'Battle')}</div>
+                                    <div class="battle-sub">vs ${escHtml(opName)} ${crowns ? '• '+crowns : ''}</div>
+                                </div>
+                            </div>
+                            <div class="battle-right">
+                                <div class="battle-trophies ${tChange>0?'t-up':tChange<0?'t-down':''}">${tChange>0?'+':''}${tChange}</div>
+                                <div class="battle-time">${timeAgo(b.battleTime)}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+        }
+
+        let clanHtml = `<div class="empty-state"><div class="empty-state-icon">🏰</div><p>${t('noClan')}</p></div>`;
+        if (p.clan) {
+            clanHtml = `
+                <div class="clan-block glass-strong">
+                    <div class="clan-icon" style="background:${meta.gradient}">${meta.icon}</div>
+                    <div class="clan-info">
+                        <h3>${escHtml(p.clan.name)}</h3>
+                        <p>${p.clan.tag}</p>
+                        <div class="clan-stats-row">
+                            <div class="clan-stat-item"><span class="cv">${num(p.donations || 0)}</span><span class="cl">${t('donations')}</span></div>
+                            <div class="clan-stat-item"><span class="cv">${p.role || '—'}</span><span class="cl">Role</span></div>
+                            <div class="clan-stat-item"><span class="cv">${num(p.clanCardsCollected || 0)}</span><span class="cl">${t('cards')}</span></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        let chestsHtml = `<div class="empty-state"><div class="empty-state-icon">🎁</div><p>No chest data</p></div>`;
+        if (chests && chests.items && chests.items.length) {
+            chestsHtml = `<h3 style="margin-bottom:14px">${t('upcomingChests')}</h3><div class="chests-row">
+                ${chests.items.map((c, i) => {
+                    const emoji = getChestEmoji(c.name);
+                    return `
+                        <div class="chest-tile glass-card">
+                            <div class="chest-icon">${emoji}</div>
+                            <div class="chest-label">${escHtml(c.name.replace(/ Chest/gi, ''))}</div>
+                            <div class="chest-pos">+${c.index}</div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>`;
+        }
+
+        document.getElementById('dashPanels').innerHTML = `
+            <div class="tab-panel active" data-panel="0">${deckHtml}</div>
+            <div class="tab-panel" data-panel="1">${battlesHtml}</div>
+            <div class="tab-panel" data-panel="2">${clanHtml}</div>
+            <div class="tab-panel" data-panel="3">${chestsHtml}</div>
+        `;
+    }
+
+    function getChestEmoji(name) {
+        if (!name) return '📦';
+        const n = name.toLowerCase();
+        if (n.includes('golden')) return '🥇';
+        if (n.includes('silver')) return '🥈';
+        if (n.includes('magic') || n.includes('magical')) return '💎';
+        if (n.includes('giant')) return '⚡';
+        if (n.includes('mega')) return '🏆';
+        if (n.includes('legendary')) return '🌟';
+        if (n.includes('epic')) return '💜';
+        if (n.includes('royal')) return '👑';
+        if (n.includes('overflow')) return '🌊';
+        return '📦';
+    }
+
+    // ===============================================
+    // CLASH OF CLANS
+    // ===============================================
+    async function loadClashOfClans(tag) {
+        updateLoaderMsg(t('loadingProfile'));
+        const player = await apiCall('coc', `/players/${tag}`);
+
+        cachedData = { player, game: 'coc', tag };
+        renderCOCDashboard(player);
+    }
+
+    function renderCOCDashboard(p) {
+        const meta = GAME_META.coc;
+
+        document.getElementById('dashHeader').innerHTML = `
+            <div class="dash-player-left">
+                <div class="dash-avatar" style="background:${meta.gradient};">${meta.icon}</div>
+                <div>
+                    <div class="dash-name">${escHtml(p.name)}</div>
+                    <div class="dash-tag">${p.tag}</div>
+                </div>
+            </div>
+            <div class="dash-player-right">
+                <div class="live-indicator"><div class="live-dot"></div>LIVE</div>
+                <button class="btn btn-ghost btn-small" onclick="refreshData()">${t('refresh')}</button>
+                <button class="btn btn-ghost btn-small" onclick="showScreen('games')">${t('logout')}</button>
+            </div>
+        `;
+
+        document.getElementById('dashStats').innerHTML = [
+            { i: '🏆', v: num(p.trophies), l: t('trophies') },
+            { i: '⭐', v: num(p.bestTrophies), l: t('maxTrophies') },
+            { i: '🏰', v: p.townHallLevel, l: t('townHall') },
+            { i: '⚔️', v: num(p.attackWins), l: t('attackWins') },
+            { i: '🛡️', v: num(p.defenseWins), l: t('defenseWins') },
+            { i: '🌟', v: num(p.warStars), l: t('warStars') },
+            { i: '🎖️', v: p.expLevel, l: t('exp') },
+            { i: '🏗️', v: p.builderHallLevel || '—', l: t('builderHall') },
+        ].map(s => `
+            <div class="stat-tile glass-card">
+                <div class="stat-tile-icon">${s.i}</div>
+                <div class="stat-tile-value">${s.v}</div>
+                <div class="stat-tile-label">${s.l}</div>
+            </div>
+        `).join('');
+
+        const tabs = [t('troops'), t('heroes'), t('clan')];
+        document.getElementById('dashTabs').innerHTML = tabs.map((tb, i) =>
+            `<button class="tab-btn ${i===0?'active':''}" onclick="switchDashTab(${i}, this)">${tb}</button>`
+        ).join('');
+
+        // Troops
+        let troopsHtml = '<div class="empty-state"><div class="empty-state-icon">🗡️</div><p>No troop data</p></div>';
+        if (p.troops && p.troops.length) {
+            troopsHtml = `<div class="items-grid">
+                ${p.troops.slice(0, 30).map(tr => `
+                    <div class="item-tile glass-card">
+                        <div class="item-emoji">${getTroopEmoji(tr.name)}</div>
+                        <div class="item-name">${escHtml(tr.name)}</div>
+                        <div class="item-level">LVL ${tr.level}/${tr.maxLevel}</div>
+                    </div>
+                `).join('')}
+            </div>`;
+        }
+
+        // Heroes
+        let heroesHtml = '<div class="empty-state"><div class="empty-state-icon">🦸</div><p>No heroes</p></div>';
+        if (p.heroes && p.heroes.length) {
+            heroesHtml = `<div class="items-grid">
+                ${p.heroes.map(h => `
+                    <div class="item-tile glass-card">
+                        <div class="item-emoji">${getHeroEmoji(h.name)}</div>
+                        <div class="item-name">${escHtml(h.name)}</div>
+                        <div class="item-level">LVL ${h.level}/${h.maxLevel}</div>
+                    </div>
+                `).join('')}
+            </div>`;
+        }
+
+        // Clan
+        let clanHtml = `<div class="empty-state"><div class="empty-state-icon">🏰</div><p>${t('noClan')}</p></div>`;
+        if (p.clan) {
+            clanHtml = `
+                <div class="clan-block glass-strong">
+                    <div class="clan-icon" style="background:${meta.gradient}">${meta.icon}</div>
+                    <div class="clan-info">
+                        <h3>${escHtml(p.clan.name)}</h3>
+                        <p>${p.clan.tag} • ${p.role || ''}</p>
+                        <div class="clan-stats-row">
+                            <div class="clan-stat-item"><span class="cv">${num(p.donations || 0)}</span><span class="cl">${t('donations')}</span></div>
+                            <div class="clan-stat-item"><span class="cv">${num(p.donationsReceived || 0)}</span><span class="cl">Received</span></div>
+                            <div class="clan-stat-item"><span class="cv">${num(p.warStars || 0)}</span><span class="cl">${t('warStars')}</span></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        document.getElementById('dashPanels').innerHTML = `
+            <div class="tab-panel active" data-panel="0">${troopsHtml}</div>
+            <div class="tab-panel" data-panel="1">${heroesHtml}</div>
+            <div class="tab-panel" data-panel="2">${clanHtml}</div>
+        `;
+    }
+
+    function getTroopEmoji(name) {
+        const n = (name || '').toLowerCase();
+        if (n.includes('barb')) return '🗡️';
+        if (n.includes('archer')) return '🏹';
+        if (n.includes('giant')) return '🧱';
+        if (n.includes('goblin')) return '👺';
+        if (n.includes('wall')) return '💣';
+        if (n.includes('wizard') || n.includes('mage')) return '🧙';
+        if (n.includes('dragon')) return '🐉';
+        if (n.includes('pekka') || n.includes('p.e.k.k.a')) return '🤖';
+        if (n.includes('hog')) return '🐗';
+        if (n.includes('miner')) return '⛏️';
+        if (n.includes('witch')) return '🧙‍♀️';
+        if (n.includes('lava')) return '🌋';
+        if (n.includes('balloon') || n.includes('loon')) return '🎈';
+        if (n.includes('healer')) return '💚';
+        if (n.includes('yeti')) return '❄️';
+        if (n.includes('electro')) return '⚡';
+        if (n.includes('minion')) return '🦇';
+        if (n.includes('valkyrie') || n.includes('valk')) return '⚔️';
+        if (n.includes('golem')) return '🪨';
+        if (n.includes('bowler')) return '🎳';
+        if (n.includes('baby')) return '🐲';
+        if (n.includes('ice')) return '🧊';
+        if (n.includes('super')) return '💪';
+        return '⚔️';
+    }
+
+    function getHeroEmoji(name) {
+        const n = (name || '').toLowerCase();
+        if (n.includes('king')) return '👑';
+        if (n.includes('queen')) return '👸';
+        if (n.includes('warden') || n.includes('grand')) return '🛡️';
+        if (n.includes('champion') || n.includes('royal')) return '⚔️';
+        return '🦸';
+    }
+
+    // ===============================================
+    // BRAWL STARS
+    // ===============================================
+    async function loadBrawlStars(tag) {
+        updateLoaderMsg(t('loadingProfile'));
+        const player = await apiCall('bs', `/players/${tag}`);
+
+        updateLoaderMsg(t('loadingBattles'));
+        let battles = [];
+        try { battles = await apiCall('bs', `/players/${tag}/battlelog`); } catch(e) {}
+
+        cachedData = { player, battles, game: 'bs', tag };
+        renderBSDashboard(player, battles);
+    }
+
+    function renderBSDashboard(p, battlelog) {
+        const meta = GAME_META.bs;
+        const battles = battlelog.items || battlelog || [];
+
+        document.getElementById('dashHeader').innerHTML = `
+            <div class="dash-player-left">
+                <div class="dash-avatar" style="background:${meta.gradient};">${meta.icon}</div>
+                <div>
+                    <div class="dash-name">${escHtml(p.name)}</div>
+                    <div class="dash-tag">${p.tag}</div>
+                </div>
+            </div>
+            <div class="dash-player-right">
+                <div class="live-indicator"><div class="live-dot"></div>LIVE</div>
+                <button class="btn btn-ghost btn-small" onclick="refreshData()">${t('refresh')}</button>
+                <button class="btn btn-ghost btn-small" onclick="showScreen('games')">${t('logout')}</button>
+            </div>
+        `;
+
+        document.getElementById('dashStats').innerHTML = [
+            { i: '🏆', v: num(p.trophies), l: t('trophies') },
+            { i: '⭐', v: num(p.highestTrophies), l: t('maxTrophies') },
+            { i: '🎭', v: p.brawlers ? p.brawlers.length : 0, l: t('totalBrawlers') },
+            { i: '🎖️', v: p.expLevel, l: t('level') },
+            { i: '👤', v: num(p.soloVictories), l: t('soloWins') },
+            { i: '👥', v: num(p.duoVictories), l: t('duoWins') },
+            { i: '🏅', v: num(p['3vs3Victories']), l: t('trioWins') },
+        ].map(s => `
+            <div class="stat-tile glass-card">
+                <div class="stat-tile-icon">${s.i}</div>
+                <div class="stat-tile-value">${s.v}</div>
+                <div class="stat-tile-label">${s.l}</div>
+            </div>
+        `).join('');
+
+        const tabs = [t('brawlers'), t('battles'), t('club')];
+        document.getElementById('dashTabs').innerHTML = tabs.map((tb, i) =>
+            `<button class="tab-btn ${i===0?'active':''}" onclick="switchDashTab(${i}, this)">${tb}</button>`
+        ).join('');
+
+        // Brawlers
+        let brawlersHtml = '<div class="empty-state"><div class="empty-state-icon">💥</div><p>No brawlers</p></div>';
+        if (p.brawlers && p.brawlers.length) {
+            const sorted = [...p.brawlers].sort((a,b) => b.trophies - a.trophies);
+            brawlersHtml = `<div class="items-grid">
+                ${sorted.map(b => `
+                    <div class="item-tile glass-card">
+                        <div class="item-emoji">${getBrawlerEmoji(b.name)}</div>
+                        <div class="item-name">${escHtml(b.name)}</div>
+                        <div class="item-level">🏆${b.trophies} • P${b.power || b.rank || '?'}</div>
+                    </div>
+                `).join('')}
+            </div>`;
+        }
+
+        // Battles
+        let battlesHtml = `<div class="empty-state"><div class="empty-state-icon">⚔️</div><p>${t('noBattles')}</p></div>`;
+        if (battles.length) {
+            battlesHtml = `<h3 style="margin-bottom:14px">${t('recentBattles')}</h3>` +
+                battles.slice(0, 15).map(b => {
+                    const event = b.event || {};
+                    const battle = b.battle || {};
+                    const result = battle.result || '';
+                    const isWin = result === 'victory';
+                    const isDraw = result === 'draw';
+                    const badgeClass = isWin ? 'b-win' : isDraw ? 'b-draw' : 'b-loss';
+                    const resultText = isWin ? t('victory') : isDraw ? t('draw') : t('defeat');
+                    const tChange = battle.trophyChange || 0;
+                    const mode = event.mode || battle.mode || '?';
+                    const map = event.map || '';
+
+                    return `
+                        <div class="battle-row glass-card">
+                            <div class="battle-left">
+                                <span class="battle-badge ${badgeClass}">${resultText}</span>
+                                <div>
+                                    <div class="battle-meta">${escHtml(mode)}</div>
+                                    <div class="battle-sub">${escHtml(map)}</div>
+                                </div>
+                            </div>
+                            <div class="battle-right">
+                                <div class="battle-trophies ${tChange>0?'t-up':tChange<0?'t-down':''}">${tChange>0?'+':''}${tChange}</div>
+                                <div class="battle-time">${timeAgo(b.battleTime)}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+        }
+
+        // Club
+        let clubHtml = `<div class="empty-state"><div class="empty-state-icon">💥</div><p>${t('noClub')}</p></div>`;
+        if (p.club && p.club.tag) {
+            clubHtml = `
+                <div class="clan-block glass-strong">
+                    <div class="clan-icon" style="background:${meta.gradient}">${meta.icon}</div>
+                    <div class="clan-info">
+                        <h3>${escHtml(p.club.name)}</h3>
+                        <p>${p.club.tag}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        document.getElementById('dashPanels').innerHTML = `
+            <div class="tab-panel active" data-panel="0">${brawlersHtml}</div>
+            <div class="tab-panel" data-panel="1">${battlesHtml}</div>
+            <div class="tab-panel" data-panel="2">${clubHtml}</div>
+        `;
+    }
+
+    function getBrawlerEmoji(name) {
+        const n = (name || '').toLowerCase();
+        if (n.includes('shelly')) return '🤠';
+        if (n.includes('colt')) return '🔫';
+        if (n.includes('bull')) return '🐂';
+        if (n.includes('brock')) return '🚀';
+        if (n.includes('rico') || n.includes('ricochet')) return '🤖';
+        if (n.includes('spike')) return '🌵';
+        if (n.includes('crow')) return '🐦';
+        if (n.includes('leon')) return '🦊';
+        if (n.includes('mortis')) return '💀';
+        if (n.includes('tara')) return '🔮';
+        if (n.includes('gene')) return '🧞';
+        if (n.includes('sandy')) return '😴';
+        if (n.includes('amber')) return '🔥';
+        if (n.includes('primo') || n.includes('el primo')) return '🥊';
+        if (n.includes('rosa')) return '🛡️';
+        if (n.includes('poco')) return '🎸';
+        if (n.includes('bo')) return '🏹';
+        if (n.includes('emz')) return '🎪';
+        if (n.includes('frank')) return '🔨';
+        if (n.includes('piper')) return '☂️';
+        if (n.includes('pam')) return '💪';
+        if (n.includes('nita')) return '🐻';
+        if (n.includes('jessie')) return '🔧';
+        if (n.includes('penny')) return '💰';
+        if (n.includes('dyna') || n.includes('dynamike')) return '💣';
+        if (n.includes('tick')) return '💣';
+        if (n.includes('8-bit') || n.includes('8bit')) return '👾';
+        if (n.includes('max')) return '⚡';
+        if (n.includes('surge')) return '⚡';
+        if (n.includes('sprout')) return '🌱';
+        if (n.includes('meg')) return '🧲';
+        if (n.includes('buzz')) return '🦈';
+        if (n.includes('edgar')) return '🧣';
+        if (n.includes('stu')) return '🔥';
+        if (n.includes('belle')) return '🔔';
+        if (n.includes('squeak')) return '🧪';
+        if (n.includes('grom')) return '💥';
+        if (n.includes('fang')) return '🥋';
+        if (n.includes('eve')) return '🐣';
+        if (n.includes('janet')) return '🎤';
+        if (n.includes('bonnie')) return '🎀';
+        if (n.includes('otis')) return '🎨';
+        if (n.includes('sam')) return '🥊';
+        if (n.includes('gus')) return '👻';
+        if (n.includes('buster')) return '🛡️';
+        if (n.includes('chester')) return '🃏';
+        if (n.includes('gray')) return '🌀';
+        if (n.includes('mandy')) return '🍬';
+        if (n.includes('hank')) return '🐡';
+        if (n.includes('charlie')) return '🕸️';
+        if (n.includes('maisie')) return '🔫';
+        if (n.includes('chuck')) return '🚂';
+        if (n.includes('larry') || n.includes('lawrie')) return '💀';
+        if (n.includes('melodie')) return '🎵';
+        if (n.includes('lily')) return '🌸';
+        if (n.includes('angelo')) return '😇';
+        if (n.includes('berry')) return '🍓';
+        if (n.includes('draco')) return '🐲';
+        if (n.includes('kenji')) return '⚔️';
+        if (n.includes('moe')) return '🐀';
+        if (n.includes('juju')) return '🎭';
+        if (n.includes('shade')) return '🌑';
+        if (n.includes('clancy')) return '🦀';
+        return '⭐';
+    }
+
+    // ===============================================
+    // TAB SWITCHING
+    // ===============================================
+    function switchDashTab(index, btn) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        const panel = document.querySelector(`.tab-panel[data-panel="${index}"]`);
+        if (panel) panel.classList.add('active');
+        animateProgress();
+    }
+
+    // ===============================================
+    // REFRESH
+    // ===============================================
+    async function refreshData() {
+        if (!cachedData.game || !cachedData.tag) return;
+
+        try {
+            showLoader(t('loading'));
+            const tag = cachedData.tag;
+
+            if (cachedData.game === 'cr') {
+                await loadClashRoyale(tag);
+            } else if (cachedData.game === 'coc') {
+                await loadClashOfClans(tag);
+            } else if (cachedData.game === 'bs') {
+                await loadBrawlStars(tag);
+            }
+
+            hideLoader();
+            toast(t('dataRefreshed'), 'ok');
+        } catch (err) {
+            hideLoader();
+            toast(t('apiError'), 'err');
+        }
+    }
+
+    // ===============================================
+    // SECURITY
+    // ===============================================
+    function escHtml(str) {
+        if (!str) return '';
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    // ===============================================
+    // INIT
+    // ===============================================
+    document.addEventListener('DOMContentLoaded', () => {
+        initTheme();
+        initLang();
+    });
+
+    // Keyboard shortcut
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') showScreen('games');
+    });
+    </script>
+</body>
+      </html>
