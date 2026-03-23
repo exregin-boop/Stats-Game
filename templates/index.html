@@ -1416,23 +1416,25 @@
     const PROXY = ''; 
     // ФУНКЦИЯ API_CALL ИЗМЕНЕНА ДЛЯ РАБОТЫ ЧЕРЕЗ ТВОЙ СЕРВЕР
     async function apiCall(game, endpoint) {
-        // Извлекаем чистый тег из эндпоинта (например из /players/%23TAG)
-        const tagMatch = endpoint.match(/players\/%23(.*)/);
-        const tag = tagMatch ? tagMatch[1] : '';
-        
-        // Чистим эндпоинт для сервера
-        const cleanEndpoint = endpoint.split('/%23')[0]; 
-        
-        // Делаем запрос к нашему Python серверу
-        const res = await fetch(`/api/${game}${cleanEndpoint}?tag=${tag}`);
+    // 1. Извлекаем тег (удаляем всё лишнее, оставляем только сам код игрока)
+    // Если в эндпоинте есть %23 (решетка), берем то, что после неё
+    const tagMatch = endpoint.match(/%23(.*)/);
+    const tag = tagMatch ? tagMatch[1] : '';
+    
+    // 2. Формируем правильный путь для твоего Flask сервера
+    // Вместо "/%2Fplayers..." мы сделаем "/api/clash/players?tag=TAG"
+    const url = `/api/${game}/players?tag=${tag}`;
+    
+    console.log("Отправляю запрос на:", url); // Для отладки
 
-        if (!res.ok) {
-            const status = res.status;
-            if (status === 404) throw new Error('NOT_FOUND');
-            throw new Error(`HTTP_${status}`);
-        }
-        return await res.json();
+    const res = await fetch(url);
+
+    if (!res.ok) {
+        if (res.status === 404) throw new Error('NOT_FOUND');
+        throw new Error(`HTTP_${res.status}`);
     }
+    return await res.json();
+}
 
     // ... Весь остальной твой JS (i18n, render, и т.д.) ОСТАЛСЯ ПРЕЖНИМ ...
     const GAME_META = {
